@@ -1,2 +1,1 @@
-Nažalost s obzirom da noviji Firefoxi nemaju neke funkcionalnosti ko prijašnji, morat ces skninit sa linka ispod i instalirat te putanju dodat u kodu.
-https://github.com/mozilla/geckodriver/releases
+Možeš samo clonat i pokrenit, naravno u idei. :) Ovo je osnovno samo da se pokrene browser, još triba nadopunit sa samom funkcionalnosti crawlera. :*
