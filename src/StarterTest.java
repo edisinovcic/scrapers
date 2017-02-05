@@ -1,9 +1,7 @@
-import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxDriver;
 
-import static org.openqa.selenium.By.*;
+import static org.openqa.selenium.By.xpath;
 
 public class StarterTest {
 
@@ -34,7 +32,7 @@ public class StarterTest {
         JavascriptExecutor executor = (JavascriptExecutor)driver;
         executor.executeScript("arguments[0].click();", element);
         */
-        click(querySelect); //invalid selector
+        //click(querySelect); //invalid selector
         click(btn);
         while(click(loadMore));
         driver.wait(5000);
