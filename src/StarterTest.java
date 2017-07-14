@@ -1,6 +1,9 @@
+import static org.openqa.selenium.By.linkText;
 import static org.openqa.selenium.By.xpath;
 
+import com.opencsv.CSVWriter;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -8,10 +11,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import javax.naming.CompositeName;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxDriver;
-import com.opencsv.*;
 
 public class StarterTest {
 
@@ -29,37 +34,36 @@ public class StarterTest {
 
 
     public static List<String> companyURLS = new ArrayList<String>();
-    public static final String querySelect = ".aNazivFirme";
+  public static final String companiesQuerry = ".aNazivFirme";
     public static String baseUrlForIteratingPages = "https://www.tvrtke.com/zagreb/web-usluge-dizajn-hosting-programiranje?stranica=";
     public static String noMorePagesCSSSelector = ".divInline.divMain>div>div";
     public static String endOfSearchNotification = "Trenutno nema tvrtki koje zadovoljavaju tražene kriterije. Molimo pregledajte naše ostale djelatnosti/mjesta/proizvode.";
     public static String companyDetails = ".divCompanyInfoCenter , .divCompanyDescriptionNoLogo";
     public static String urlsFile = "company_urls.txt";
+  public static String companiesCSV = "results.csv";
+  public static List<String> extractedCompanyDetails = new ArrayList<String>();
+
 
     public static void main(String[] args) throws InterruptedException, IOException {
         //System.setProperty("webdriver.gecko.driver","geckodriver");
         driver = new FirefoxDriver();
         openBrowser(URL);
 
-        for (int i = 2; i < 5; i++) {
+      for (int i = 2; i < 3; i++) {
             if(getNumberOfCompaniesOnPage() == 0){
                 break;
             }
             crawlCurrentPage();
-            driver.get(baseUrlForIteratingPages + 70);
+        driver.get(baseUrlForIteratingPages + i);
         }
 
-        //read all existing urls from file
-        readFromFile(urlsFile);
+      createFileIfFileDoesNotExists(urlsFile);
+      createFileIfFileDoesNotExists(companiesCSV);
 
-        List<String> urlsInFile = readFromFile(urlsFile);
-        addOnlyNewURLSToFile(urlsInFile, companyURLS);
-
-
-        crawlAllCompanyDetails();
-        //open all Company details
-
-
+      List<String> urlsInFile = readFromFile(urlsFile);
+      addOnlyNewURLSToFile(urlsInFile, companyURLS);
+      //open all Company details
+      crawlAllCompanyDetails();
 
 
         //driver.quit();
@@ -68,7 +72,7 @@ public class StarterTest {
         JavascriptExecutor executor = (JavascriptExecutor)driver;
         executor.executeScript("arguments[0].click();", element);
         */
-        //click(querySelect); //invalid selector
+      //click(companiesQuerry); //invalid selector
         /*
         click(btn);
         while(click(loadMore));
@@ -98,12 +102,12 @@ public class StarterTest {
     }
 
     public static int getNumberOfCompaniesOnPage(){
-        List<WebElement> elements = driver.findElementsByCssSelector(querySelect);
+      List<WebElement> elements = driver.findElementsByCssSelector(companiesQuerry);
         return elements.size();
     }
 
     public static void crawlCurrentPage() throws InterruptedException {
-        List<WebElement> elements = driver.findElementsByCssSelector(querySelect);
+      List<WebElement> elements = driver.findElementsByCssSelector(companiesQuerry);
         for (WebElement element : elements) {
             companyURLS.add(element.getAttribute("href"));
         }
@@ -111,15 +115,21 @@ public class StarterTest {
     }
 
     public static void writeToCSV() throws IOException {
-        CSVWriter writer = new CSVWriter(new FileWriter("results.csv"), ';');
+      CSVWriter writer = new CSVWriter(new FileWriter(companiesCSV), ';');
         List<String[]> data = new ArrayList<String[]>();
-        for(String element : companyURLS){
-            data.add(element.split("žnjo"));
+      for (String company : extractedCompanyDetails) {
+        CompanyDetails companyDetails = new CompanyDetails();
+        //companyDetails.setAdresa(adresa);
+        data.add(company.split("\n"));
         }
 
         writer.writeAll(data);
         writer.close();
     }
+
+
+
+
 
     public static void writeURLSToFile(List<String> companyURLS) throws FileNotFoundException {
         PrintWriter pw = new PrintWriter(new FileOutputStream(urlsFile));
@@ -129,6 +139,7 @@ public class StarterTest {
         }
         pw.write(output);
         pw.close();
+      pw.close();
     }
 
     public static void addOnlyNewURLSToFile(List<String> oldList, List<String> newList)
@@ -155,16 +166,28 @@ public class StarterTest {
             while ((line = br.readLine()) != null) {
                 URLSFromFile.add(line);
             }
+          br.close();
             return URLSFromFile;
         }
     }
 
     public static void crawlAllCompanyDetails() throws IOException {
-        for (String companyURL : companyURLS) {
+      List<CompanyDetails> companiesList = new ArrayList<CompanyDetails>();
+      for (String companyURL : companyURLS) {
             driver.get(companyURL);
             WebElement about = driver.findElementByCssSelector(companyDetails);
+            CompanyDetails company = new CompanyDetails();
+            company.setAdresa(about.findElement(linkText("Adresa")).getText());
+            extractedCompanyDetails.add(about.getText());
             System.out.println(about.getText());
         }
         writeToCSV();
     }
+
+  public static void createFileIfFileDoesNotExists(String url) throws IOException {
+    File file = new File(url);
+    if (!file.exists()) {
+      file.createNewFile();
+    }
+  }
 }
